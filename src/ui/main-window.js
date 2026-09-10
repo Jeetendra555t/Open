@@ -574,7 +574,7 @@ class MainWindowUI {
                 }
             }
             
-            // Alt+A is handled globally by the main process
+            // Ctrl+Shift+A is handled globally by the main process
             // No need to handle it here since it needs to work even when windows are non-interactive
         });
     }
@@ -795,7 +795,7 @@ class MainWindowUI {
                         
             const tooltip = this.isInteractive ? 
                 `${skillName} - Use ⌘↑/↓ to navigate skills` : 
-                `${skillName} - Enable interactive mode (Alt+A) to navigate`;
+                `${skillName} - Enable interactive mode (Ctrl+Shift+A) to navigate`;
             this.skillIndicator.title = tooltip;
             
             // Add visual feedback for skill change

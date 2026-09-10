@@ -396,32 +396,23 @@ class ApplicationController {
       "CommandOrControl+Shift+C": () => windowManager.switchToWindow("chat"),
       "CommandOrControl+Shift+\\": () => this.clearSessionMemory(),
       "CommandOrControl+,": () => windowManager.showSettings(),
-      "Alt+A": () => windowManager.toggleInteraction(),
-      "Alt+R": () => this.toggleSpeechRecognition(),
+      "CommandOrControl+Shift+A": () => windowManager.toggleInteraction(),
+      "CommandOrControl+Shift+R": () => this.toggleSpeechRecognition(),
       "CommandOrControl+Shift+T": () => windowManager.forceAlwaysOnTopForAllWindows(),
-      "CommandOrControl+Shift+Alt+T": () => {
-        const results = windowManager.testAlwaysOnTopForAllWindows();
-        logger.info('Always-on-top test triggered via shortcut', results);
-      },
       // Context-sensitive shortcuts based on interaction mode
       "CommandOrControl+Up": () => this.handleUpArrow(),
       "CommandOrControl+Down": () => this.handleDownArrow(),
       "CommandOrControl+Left": () => this.handleLeftArrow(),
       "CommandOrControl+Right": () => this.handleRightArrow(),
-      // Scroll AI Response window remotely without moving mouse (multiple bindings)
-      "Alt+Down": () => this.scrollLLMResponse("down"),
-      "Alt+Up": () => this.scrollLLMResponse("up"),
-      "Alt+J": () => this.scrollLLMResponse("down"),
-      "Alt+K": () => this.scrollLLMResponse("up"),
-      "Alt+PageDown": () => this.scrollLLMResponse("pagedown"),
-      "Alt+PageUp": () => this.scrollLLMResponse("pageup"),
-      "CommandOrControl+Alt+Down": () => this.scrollLLMResponse("down"),
-      "CommandOrControl+Alt+Up": () => this.scrollLLMResponse("up"),
+      // Scroll AI Response window remotely without moving mouse
       "CommandOrControl+Shift+Down": () => this.scrollLLMResponse("down"),
       "CommandOrControl+Shift+Up": () => this.scrollLLMResponse("up"),
+      "CommandOrControl+Shift+J": () => this.scrollLLMResponse("down"),
+      "CommandOrControl+Shift+K": () => this.scrollLLMResponse("up"),
+      "CommandOrControl+Shift+PageDown": () => this.scrollLLMResponse("pagedown"),
+      "CommandOrControl+Shift+PageUp": () => this.scrollLLMResponse("pageup"),
       // Toggle Hide / Show AI Response block without mouse
-      "Alt+Q": () => windowManager.toggleLLMResponse(),
-      "Alt+X": () => windowManager.toggleLLMResponse(),
+      "CommandOrControl+Shift+Q": () => windowManager.toggleLLMResponse(),
       "CommandOrControl+Shift+X": () => windowManager.toggleLLMResponse(),
     };
 

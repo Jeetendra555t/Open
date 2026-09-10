@@ -147,9 +147,9 @@ For Azure Speech, create a Speech resource in the [Azure Portal](https://portal.
 | Action | Shortcut | Description |
 |---|---|---|
 | Screenshot capture | `Cmd/Ctrl + Shift + S` | Capture the screen and analyze it with Gemini |
-| Toggle speech | `Alt + R` | Start or stop voice recognition, if configured |
+| Toggle speech | `Cmd/Ctrl + Shift + R` | Start or stop voice recognition, if configured |
 | Toggle visibility | `Cmd/Ctrl + Shift + V` | Show or hide all windows |
-| Toggle interaction | `Cmd/Ctrl + Shift + I` or `Alt + A` | Enable or disable click through |
+| Toggle interaction | `Cmd/Ctrl + Shift + I` or `Cmd/Ctrl + Shift + A` | Enable or disable click through |
 | Open chat | `Cmd/Ctrl + Shift + C` | Open the interactive chat window |
 | Settings | `Cmd/Ctrl + ,` | Open the settings panel |
 
