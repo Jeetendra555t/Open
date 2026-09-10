@@ -338,8 +338,8 @@ class MainWindowUI {
         // Language dropdown
         this.languageSelect = document.getElementById('codingLanguage');
         if (this.languageSelect) {
-            // Set default to C++ if no value is set
-            this.languageSelect.value = 'cpp';
+            // Set default to Java if no value is set
+            this.languageSelect.value = 'java';
             
             // Initialize with current setting
             if (window.electronAPI && window.electronAPI.getSettings) {
@@ -347,13 +347,13 @@ class MainWindowUI {
                     if (settings && settings.codingLanguage) {
                         this.languageSelect.value = settings.codingLanguage;
                     } else {
-                        // Save C++ as default if no language is set
-                        this.languageSelect.value = 'cpp';
-                        window.electronAPI.saveSettings({ codingLanguage: 'cpp' });
+                        // Save Java as default if no language is set
+                        this.languageSelect.value = 'java';
+                        window.electronAPI.saveSettings({ codingLanguage: 'java' });
                     }
                 }).catch(() => {
-                    // Fallback to C++ on error
-                    this.languageSelect.value = 'cpp';
+                    // Fallback to Java on error
+                    this.languageSelect.value = 'java';
                 });
             }
 

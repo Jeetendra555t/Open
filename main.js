@@ -113,8 +113,8 @@ class ApplicationController {
     this.isReady = false;
     this.starting = false;
     this.activeSkill = "dsa";
-  // Default to C++ so language is enforced from first run
-  this.codingLanguage = "cpp";
+    // Default to Java so language is enforced from first run
+    this.codingLanguage = "java";
     this.speechAvailable = false;
 
     // Utterance coalescing: VAD emits a transcript per natural pause, but a
@@ -408,6 +408,21 @@ class ApplicationController {
       "CommandOrControl+Down": () => this.handleDownArrow(),
       "CommandOrControl+Left": () => this.handleLeftArrow(),
       "CommandOrControl+Right": () => this.handleRightArrow(),
+      // Scroll AI Response window remotely without moving mouse (multiple bindings)
+      "Alt+Down": () => this.scrollLLMResponse("down"),
+      "Alt+Up": () => this.scrollLLMResponse("up"),
+      "Alt+J": () => this.scrollLLMResponse("down"),
+      "Alt+K": () => this.scrollLLMResponse("up"),
+      "Alt+PageDown": () => this.scrollLLMResponse("pagedown"),
+      "Alt+PageUp": () => this.scrollLLMResponse("pageup"),
+      "CommandOrControl+Alt+Down": () => this.scrollLLMResponse("down"),
+      "CommandOrControl+Alt+Up": () => this.scrollLLMResponse("up"),
+      "CommandOrControl+Shift+Down": () => this.scrollLLMResponse("down"),
+      "CommandOrControl+Shift+Up": () => this.scrollLLMResponse("up"),
+      // Toggle Hide / Show AI Response block without mouse
+      "Alt+Q": () => windowManager.toggleLLMResponse(),
+      "Alt+X": () => windowManager.toggleLLMResponse(),
+      "CommandOrControl+Shift+X": () => windowManager.toggleLLMResponse(),
     };
 
     Object.entries(shortcuts).forEach(([accelerator, handler]) => {
@@ -1027,6 +1042,13 @@ class ApplicationController {
     // Interactive mode: Right arrow does nothing
   }
 
+  scrollLLMResponse(direction) {
+    const llmWindow = windowManager.getWindow("llmResponse");
+    if (llmWindow && !llmWindow.isDestroyed()) {
+      llmWindow.webContents.send("scroll-llm-response", { direction });
+    }
+  }
+
   navigateSkill(direction) {
     const availableSkills = [
       "dsa",
@@ -1589,7 +1611,7 @@ class ApplicationController {
     // using. Empty strings are returned rather than skipped so the UI can
     // distinguish "unset" from "stale value from a previous load".
     return {
-      codingLanguage: this.codingLanguage || "cpp",
+      codingLanguage: this.codingLanguage || "java",
       activeSkill: this.activeSkill || "dsa",
       appIcon: this.appIcon || "terminal",
       selectedIcon: this.appIcon || "terminal",

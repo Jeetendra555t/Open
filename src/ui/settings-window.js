@@ -90,9 +90,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (geminiKeyInput) geminiKeyInput.value = settings.geminiKey || '';
         if (windowGapInput) windowGapInput.value = settings.windowGap || '';
 
-        // Set C++ as default if no coding language is specified
+        // Set Java as default if no coding language is specified
         if (codingLanguageSelect) {
-            codingLanguageSelect.value = settings.codingLanguage || 'cpp';
+            codingLanguageSelect.value = settings.codingLanguage || 'java';
         }
 
         if (settings.activeSkill && activeSkillSelect) activeSkillSelect.value = settings.activeSkill;

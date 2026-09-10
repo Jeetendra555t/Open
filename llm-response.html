@@ -88,32 +88,33 @@
             background: transparent;
         }
 
-        /* Split layout improvements */
+        /* Vertical layout: Code first on top, Explanation underneath */
         .split-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
             height: 100vh;
-            padding: 0;
+            padding: 0.75rem;
             box-sizing: border-box;
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
         }
 
-        /* Panel improvements with proper scrolling */
-        .text-panel, .code-panel {
+        /* Panel styling with full width */
+        .code-panel, .text-panel {
+            width: 100%;
             background: transparent;
-            overflow: hidden;
+            overflow: visible;
             position: relative;
-            min-height: 0; /* Important for grid items */
+            flex-shrink: 0;
         }
 
         .panel-content {
-            height: 100%;
-            overflow-y: auto;
-            overflow-x: auto;
-            padding: 1rem;
+            height: auto;
+            overflow: visible;
+            padding: 0;
             box-sizing: border-box;
-            scroll-behavior: smooth;
         }
 
         /* Full content layout */
@@ -159,6 +160,8 @@
             margin-bottom: 1rem;
             border-radius: 0.5rem;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            overflow: hidden;
         }
         .code-header {
             background-color: rgba(0, 0, 0, 0.4);
@@ -171,19 +174,32 @@
         }
         .code-content {
             padding: 1rem;
-            overflow-x: auto;
+            overflow-x: hidden;
             background-color: rgba(0, 0, 0, 0.2);
             border-radius: 0 0 0.5rem 0.5rem;
+            width: 100%;
+            box-sizing: border-box;
         }
-        .code-content pre {
-            background-color: transparent;
-            border: none;
-            margin: 0;
-            padding: 0;
+        .code-content pre, 
+        pre[class*="language-"], 
+        .markdown-content pre {
+            background-color: transparent !important;
+            border: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            white-space: pre-wrap !important;
+            word-break: break-word !important;
+            overflow-x: hidden !important;
+            font-size: 0.85rem;
+            line-height: 1.4;
         }
-        .code-content code {
-            background-color: transparent;
-            color: #e5e7eb;
+        .code-content code, 
+        code[class*="language-"], 
+        .markdown-content code {
+            background-color: transparent !important;
+            color: #e5e7eb !important;
+            white-space: pre-wrap !important;
+            word-break: break-word !important;
         }
         .no-code {
             display: flex;
@@ -441,19 +457,19 @@
 
         <!-- Response Content -->
         <div id="response-content" class="content-area hidden">
-            <!-- Split Layout -->
-            <div id="split-layout" class="split-layout hidden">
-                <!-- Text Panel -->
-                <div class="text-panel">
-                    <div class="panel-content" tabindex="0">
-                        <div id="text-content" class="markdown-content"></div>
+            <!-- Stacked Layout (Code First, then Explanation) -->
+            <div id="split-layout" class="split-layout hidden" tabindex="0">
+                <!-- Code Panel (Top, Full Width) -->
+                <div class="code-panel">
+                    <div class="panel-content">
+                        <div id="code-content"></div>
                     </div>
                 </div>
 
-                <!-- Code Panel -->
-                <div class="code-panel">
-                    <div class="panel-content" tabindex="0">
-                        <div id="code-content"></div>
+                <!-- Text / Explanation Panel (Bottom, Full Width) -->
+                <div class="text-panel">
+                    <div class="panel-content">
+                        <div id="text-content" class="markdown-content"></div>
                     </div>
                 </div>
             </div>
@@ -569,6 +585,31 @@
                     }
                 });
                 
+                // Remote keyboard scrolling listener
+                if (typeof window.electronAPI.receive === 'function') {
+                    window.electronAPI.receive('scroll-llm-response', (event, data) => {
+                        const amount = (data?.direction === 'pagedown' || data?.direction === 'pageup') ? 250 : 80;
+                        const targets = [
+                            document.getElementById('split-layout'),
+                            document.querySelector('.full-content-inner'),
+                            document.getElementById('response-content'),
+                            document.querySelector('.code-panel .panel-content'),
+                            document.querySelector('.text-panel .panel-content'),
+                            document.body
+                        ].filter(Boolean);
+                        
+                        targets.forEach(target => {
+                            if (target && target.scrollHeight > target.clientHeight) {
+                                if (data?.direction === 'down' || data?.direction === 'pagedown') {
+                                    target.scrollBy({ top: amount, behavior: 'smooth' });
+                                } else if (data?.direction === 'up' || data?.direction === 'pageup') {
+                                    target.scrollBy({ top: -amount, behavior: 'smooth' });
+                                }
+                            }
+                        });
+                    });
+                }
+                
                 console.log('[LLM-RESPONSE] IPC listeners set up successfully');
             } else {
                 console.error('[LLM-RESPONSE] electronAPI not available!');
@@ -579,6 +620,19 @@
             const loadingElement = document.getElementById('loading');
             const responseElement = document.getElementById('response-content');
             
+            // Immediately clear out old content so it refreshes cleanly
+            const codeContent = document.getElementById('code-content');
+            const textContent = document.getElementById('text-content');
+            const fullMarkdown = document.getElementById('full-markdown');
+            if (codeContent) codeContent.innerHTML = '';
+            if (textContent) textContent.innerHTML = '';
+            if (fullMarkdown) fullMarkdown.innerHTML = '';
+
+            const splitLayout = document.getElementById('split-layout');
+            const fullContent = document.getElementById('full-content');
+            if (splitLayout) splitLayout.scrollTop = 0;
+            if (fullContent) fullContent.scrollTop = 0;
+            
             if (loadingElement) {
                 loadingElement.classList.remove('hidden');
                 loadingElement.style.display = ''; // Remove any forced display styles
@@ -588,7 +642,7 @@
                 responseElement.classList.add('hidden');
             }
             
-            console.log('Loading state shown - should see Analyzing...');
+            console.log('Loading state shown - previous content wiped for fresh response');
         }
 
         function hideLoadingState() {
@@ -689,16 +743,11 @@
         function setupScrolling() {
             // Set up scrollable elements based on current layout
             setTimeout(() => {
-                if (hasCode) {
-                    scrollableElements = [
-                        document.querySelector('.text-panel .panel-content'),
-                        document.querySelector('.code-panel .panel-content')
-                    ].filter(el => el !== null);
-                } else {
-                    scrollableElements = [
-                        document.querySelector('.full-content-inner')
-                    ].filter(el => el !== null);
-                }
+                scrollableElements = [
+                    document.getElementById('split-layout'),
+                    document.querySelector('.full-content-inner')
+                ].filter(el => el !== null);
+                
                 // Reset scroll positions and ensure elements are focusable
                 scrollableElements.forEach(element => {
                     element.scrollTop = 0;

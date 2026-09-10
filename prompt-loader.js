@@ -94,8 +94,9 @@ STRICT REQUIREMENTS:
 - Respond ONLY in ${languageTitle}. Do not include any snippets or alternatives in other languages.
 - All code blocks must use triple backticks with the exact language tag: \`\`\`${fenceTag}\`\`\`.
 - Aim for the best possible time and space complexity; prefer optimal algorithms and data structures.
-- Provide: brief approach, then final ${languageTitle} implementation, followed by time/space complexity.
-- If the user's input is a problem statement (and does not include code), produce a complete, runnable ${languageTitle} solution without asking for clarification.
+- ALWAYS output the complete ${languageTitle} code solution FIRST, followed by time/space complexity and brief approach notes.
+- If the question is an MCQ or subjective question, output the direct correct answer immediately without code.
+- If the user's input is a coding problem statement (and does not include code), produce a complete, runnable ${languageTitle} solution without asking for clarification.
 - Avoid unnecessary verbosity; focus on correctness, clarity, and efficiency.`;
         break;
       default:

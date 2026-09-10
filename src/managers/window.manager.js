@@ -100,6 +100,27 @@ class WindowManager {
     // ... existing initialization code ...
   }
 
+  setHighPriorityAlwaysOnTop(win) {
+    if (!win || win.isDestroyed()) return;
+    try {
+      win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    } catch (_) {}
+
+    try {
+      win.setAlwaysOnTop(true, 'screen-saver', 2);
+    } catch (e1) {
+      try {
+        win.setAlwaysOnTop(true, 'pop-up-menu', 2);
+      } catch (e2) {
+        try {
+          win.setAlwaysOnTop(true, 'floating', 2);
+        } catch (e3) {
+          win.setAlwaysOnTop(true);
+        }
+      }
+    }
+  }
+
   async initializeWindows(options = {}) {
     const { showMainWindow = true } = options;
     if (this.isInitialized || this.isInitializing) {
@@ -145,15 +166,7 @@ class WindowManager {
     if (!mainWindow) return;
     
     // Immediate always-on-top enforcement for main window
-    if (process.platform === 'darwin') {
-      try {
-        mainWindow.setAlwaysOnTop(true, 'screen-saver', 2);
-      } catch (error) {
-        mainWindow.setAlwaysOnTop(true, 'floating', 2);
-      }
-    } else {
-      mainWindow.setAlwaysOnTop(true);
-    }
+    this.setHighPriorityAlwaysOnTop(mainWindow);
     
     // Wait for app to fully initialize and detect current desktop
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -162,15 +175,7 @@ class WindowManager {
     // Additional enforcement after showing
     await new Promise((resolve) => setTimeout(resolve, 200));
     if (!mainWindow.isDestroyed()) {
-      if (process.platform === 'darwin') {
-        try {
-          mainWindow.setAlwaysOnTop(true, 'screen-saver', 2);
-        } catch (error) {
-          mainWindow.setAlwaysOnTop(true, 'floating', 2);
-        }
-      } else {
-        mainWindow.setAlwaysOnTop(true);
-      }
+      this.setHighPriorityAlwaysOnTop(mainWindow);
     }
     
     this.isVisible = true;
@@ -189,15 +194,7 @@ class WindowManager {
 
     // Always-on-top must be set even when we're deferring the visual
     // show — it persists into the future showOnCurrentDesktop call.
-    if (process.platform === 'darwin') {
-      try {
-        window.setAlwaysOnTop(true, 'screen-saver', 2);
-      } catch (error) {
-        window.setAlwaysOnTop(true, 'floating', 2);
-      }
-    } else {
-      window.setAlwaysOnTop(true);
-    }
+    this.setHighPriorityAlwaysOnTop(window);
 
     // Only auto-show when explicitly allowed (e.g. not during first-run
     // onboarding). The single entry point for showing the overlay is
@@ -209,15 +206,7 @@ class WindowManager {
         // Additional enforcement after showing
         setTimeout(() => {
           if (!window.isDestroyed()) {
-            if (process.platform === 'darwin') {
-              try {
-                window.setAlwaysOnTop(true, 'screen-saver', 2);
-              } catch (error) {
-                window.setAlwaysOnTop(true, 'floating', 2);
-              }
-            } else {
-              window.setAlwaysOnTop(true);
-            }
+            this.setHighPriorityAlwaysOnTop(window);
           }
         }, 200);
       }, 100);
@@ -358,7 +347,8 @@ class WindowManager {
         hasShadow: false,
         useContentSize: windowConfig.useContentSize || false,
         thickFrame: false,
-        focusable: true,
+        focusable: false,
+        acceptFirstMouse: true,
         ...(process.platform === 'darwin' && {
           titleBarStyle: 'hiddenInset',
           trafficLightPosition: { x: -100, y: -100 },
@@ -381,6 +371,8 @@ class WindowManager {
         closable: false,
         hasShadow: false,
         thickFrame: false,
+        focusable: false,
+        acceptFirstMouse: true,
         ...(process.platform === 'darwin' && {
           titleBarStyle: 'hiddenInset',
           trafficLightPosition: { x: -100, y: -100 },
@@ -438,6 +430,7 @@ class WindowManager {
         parent: null,
         modal: false,
         thickFrame: false,
+        type: 'toolbar',
       };
     }
 
@@ -538,88 +531,20 @@ class WindowManager {
   }
 
   applyStealthMeasures(window, type) {
-    // Enhanced always-on-top enforcement for all platforms
-    if (process.platform === 'darwin') {
-      // macOS: Use native window level constants for maximum effectiveness
-      try {
-        // Try the most aggressive levels first
-        const levels = [
-          'screen-saver',    // Highest level
-          'pop-up-menu',     // Menu level
-          'modal-panel',     // Modal panel level
-          'floating',        // Floating level
-          'normal'           // Fallback to normal with alwaysOnTop
-        ];
-        
-        let levelSet = false;
-        for (const level of levels) {
-          try {
-            window.setAlwaysOnTop(true, level, 1);
-            levelSet = true;
-            logger.debug(`Successfully set always-on-top with level: ${level}`, { type });
-            break;
-          } catch (levelError) {
-            logger.debug(`Failed to set level: ${level}`, { error: levelError.message });
-          }
-        }
-        
-        if (!levelSet) {
-          // Final fallback
-          window.setAlwaysOnTop(true);
-        }
-        
-        // Additional macOS-specific enforcement
-        setTimeout(() => {
-          if (!window.isDestroyed()) {
-            try {
-              // Force re-application of always-on-top
-              window.setAlwaysOnTop(false);
-              setTimeout(() => {
-                if (!window.isDestroyed()) {
-                  window.setAlwaysOnTop(true, 'floating', 1);
-                }
-              }, 50);
-            } catch (error) {
-              logger.warn('Error in macOS re-enforcement', { error: error.message });
-            }
-          }
-        }, 200);
-        
-      } catch (error) {
-        logger.warn('Error setting always-on-top for macOS', { error: error.message });
-        // Absolute fallback
-        window.setAlwaysOnTop(true);
-      }
-    } else if (process.platform === 'win32') {
-      // Windows: Multiple enforcement attempts
-      window.setAlwaysOnTop(true);
-      
-      setTimeout(() => {
-        if (!window.isDestroyed()) {
-          window.setAlwaysOnTop(true);
-        }
-      }, 100);
-      
-      setTimeout(() => {
-        if (!window.isDestroyed()) {
-          window.setAlwaysOnTop(true);
-        }
-      }, 500);
-      
-    } else {
-      // Linux and other platforms
-      window.setAlwaysOnTop(true);
-      
-      setTimeout(() => {
-        if (!window.isDestroyed()) {
-          window.setAlwaysOnTop(true);
-        }
-      }, 100);
-    }
+    this.setHighPriorityAlwaysOnTop(window);
 
-    // Ensure window appears on all workspaces/desktops initially
-    window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-    
+    setTimeout(() => {
+      if (!window.isDestroyed()) {
+        this.setHighPriorityAlwaysOnTop(window);
+      }
+    }, 100);
+
+    setTimeout(() => {
+      if (!window.isDestroyed()) {
+        this.setHighPriorityAlwaysOnTop(window);
+      }
+    }, 500);
+
     // Hide from taskbar to maintain stealth
     window.setSkipTaskbar(true);
     
@@ -634,24 +559,10 @@ class WindowManager {
       logger.debug('Content protection not supported on this platform');
     }
     
-    // More aggressive event listeners to maintain always-on-top behavior
+    // Event listeners to maintain high-priority always-on-top behavior
     const enforceAlwaysOnTop = () => {
       if (!window.isDestroyed()) {
-        try {
-          if (process.platform === 'darwin') {
-            // Try multiple levels on macOS
-            window.setAlwaysOnTop(true, 'floating', 1);
-            setTimeout(() => {
-              if (!window.isDestroyed()) {
-                window.setAlwaysOnTop(true, 'screen-saver', 1);
-              }
-            }, 50);
-          } else {
-            window.setAlwaysOnTop(true);
-          }
-        } catch (error) {
-          logger.debug('Error in enforceAlwaysOnTop', { error: error.message });
-        }
+        this.setHighPriorityAlwaysOnTop(window);
       }
     };
     
@@ -675,7 +586,7 @@ class WindowManager {
       setTimeout(enforceAlwaysOnTop, 50);
     });
     
-    // Periodic enforcement every 3 seconds (more frequent)
+    // Periodic enforcement every 3 seconds
     const periodicEnforcement = setInterval(() => {
       if (window.isDestroyed()) {
         clearInterval(periodicEnforcement);
@@ -705,19 +616,20 @@ class WindowManager {
     
     // All windows positioned at top of screen with small margin
     const topMargin = 20;
+    const leftMargin = 25;
     const [windowWidth] = window.getSize();
     
     const positions = {
-      main: { x: displayX + 50, y: displayY + topMargin },
+      main: { x: displayX + leftMargin, y: displayY + topMargin },
       chat: { x: displayX + screenWidth - windowWidth - 50, y: displayY + topMargin },
-      llmResponse: { x: displayX + (screenWidth - windowWidth) / 2, y: displayY + topMargin },
+      llmResponse: { x: displayX + leftMargin, y: displayY + topMargin },
       settings: { x: displayX + (screenWidth - windowWidth) / 2, y: displayY + topMargin }
     };
 
-    const position = positions[type] || { x: displayX + 100, y: displayY + topMargin };
+    const position = positions[type] || { x: displayX + leftMargin, y: displayY + topMargin };
     window.setPosition(position.x, position.y);
     
-    logger.debug('Positioned window at top', {
+    logger.debug('Positioned window at top-left', {
       type,
       position: `${position.x},${position.y}`,
       topMargin,
@@ -725,7 +637,7 @@ class WindowManager {
     });
   }
 
-  // New method to position bound windows (vertical column layout) - Always at top
+  // New method to position bound windows (vertical column layout) - Always at top-left
   positionBoundWindows() {
     const mainWindow = this.windows.get('main');
     const llmWindow = this.windows.get('llmResponse');
@@ -738,32 +650,24 @@ class WindowManager {
     const [mainWidth, mainHeight] = mainWindow.getSize();
     const [llmWidth, llmHeight] = llmWindow.getSize();
     
-    // Always position at the top of the screen with small margin
+    // Always position at the top-left of the screen with small margin
     const topMargin = 20;
+    const leftMargin = 25;
     const startY = displayY + topMargin;
+    const startX = displayX + leftMargin;
     
-    // Use the wider window for horizontal centering
-    const maxWidth = Math.max(mainWidth, llmWidth);
-    
-    // Center horizontally on the display
-    const xPosition = displayX + Math.round((screenWidth - maxWidth) / 2);
-    
-    // Ensure windows don't go outside screen bounds horizontally
-    const adjustedMainX = Math.max(displayX, Math.min(displayX + screenWidth - mainWidth, xPosition));
-    const adjustedLlmX = Math.max(displayX, Math.min(displayX + screenWidth - llmWidth, xPosition));
-    
-    // Position main window (top)
-    const mainX = adjustedMainX;
+    // Position main window (top-left)
+    const mainX = startX;
     const mainY = startY;
     mainWindow.setPosition(mainX, mainY);
     
-    // Position LLM response window below with gap
-    const llmX = adjustedLlmX;
+    // Position LLM response window below with gap (aligned left)
+    const llmX = startX;
     const llmY = startY + mainHeight + this.windowGap;
     llmWindow.setPosition(llmX, llmY);
     
     // Update stored position (use main window position as reference)
-    this.boundWindowsPosition = { x: adjustedMainX, y: startY };
+    this.boundWindowsPosition = { x: startX, y: startY };
     
     logger.debug('Positioned bound windows at top (column layout)', {
       mainPosition: `${mainX},${mainY}`,
@@ -829,53 +733,22 @@ class WindowManager {
     const llmWin = this.windows.get('llmResponse');
     const isLLM = llmWin && !llmWin.isDestroyed() && win.id === llmWin.id;
 
-    if (process.platform === 'darwin') {
-      // macOS: prevent space switching and keep visibility stable
-      win.hide();
-      win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    this.setHighPriorityAlwaysOnTop(win);
 
-      const setMacOSAlwaysOnTop = () => {
-        if (win.isDestroyed()) return;
-        try {
-          win.setAlwaysOnTop(true, 'screen-saver', 2);
-        } catch {
-          try { win.setAlwaysOnTop(true, 'pop-up-menu', 2); }
-          catch { try { win.setAlwaysOnTop(true, 'floating', 2); }
-          catch { win.setAlwaysOnTop(true); }}
-        }
-      };
-
-      setMacOSAlwaysOnTop();
-
-      setTimeout(() => {
-        if (win.isDestroyed()) return;
-        win.show();
-        win.focus();
-        setMacOSAlwaysOnTop();
-        setTimeout(() => { if (!win.isDestroyed()) setMacOSAlwaysOnTop(); }, 100);
-        // Keep LLM window visible across workspaces; others revert
-        setTimeout(() => {
-          if (win.isDestroyed()) return;
-          if (!isLLM) {
-            win.setVisibleOnAllWorkspaces(false);
-          }
-          setMacOSAlwaysOnTop();
-        }, 300);
-      }, 50);
+    if (win.showInactive) {
+      win.showInactive();
     } else {
-      // Linux/Windows
-      win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-      win.setAlwaysOnTop(true);
       win.show();
-      win.focus();
-      setTimeout(() => {
-        if (win.isDestroyed()) return;
-        if (!isLLM) {
-          win.setVisibleOnAllWorkspaces(false);
-        }
-        win.setAlwaysOnTop(true);
-      }, 500);
     }
+
+    setTimeout(() => {
+      if (win.isDestroyed()) return;
+      if (!isLLM) {
+        win.setVisibleOnAllWorkspaces(false);
+      }
+      this.setHighPriorityAlwaysOnTop(win);
+    }, 300);
 
     logger.debug('Showing window on current desktop with enhanced always-on-top', {
       platform: process.platform,
@@ -883,6 +756,7 @@ class WindowManager {
       isDestroyed: win.isDestroyed()
     });
   }
+
   
   setupWindowEventHandlers() {
     this.windows.forEach((window, type) => {
@@ -1066,7 +940,7 @@ class WindowManager {
     
     this.isVisible = true;
     const activeWindow = this.windows.get(this.activeWindow);
-    if (activeWindow) {
+    if (activeWindow && this.activeWindow === 'chat') {
       activeWindow.focus();
     }
     
@@ -1137,48 +1011,12 @@ class WindowManager {
   enforceAlwaysOnTopForAllWindows() {
     this.windows.forEach((window, type) => {
       if (!window.isDestroyed()) {
-        try {
-          if (process.platform === 'darwin') {
-            // Try multiple levels for macOS
-            window.setAlwaysOnTop(true, 'pop-up-menu', 1);
-            
-            setTimeout(() => {
-              if (!window.isDestroyed()) {
-                window.setAlwaysOnTop(true, 'floating', 1);
-              }
-            }, 100);
-            
-            setTimeout(() => {
-              if (!window.isDestroyed()) {
-                window.setAlwaysOnTop(true, 'screen-saver', 1);
-              }
-            }, 200);
-          } else {
-            // Windows and Linux
-            window.setAlwaysOnTop(true);
-            
-            // Additional enforcement after a short delay
-            setTimeout(() => {
-              if (!window.isDestroyed()) {
-                window.setAlwaysOnTop(true);
-              }
-            }, 100);
+        this.setHighPriorityAlwaysOnTop(window);
+        setTimeout(() => {
+          if (!window.isDestroyed()) {
+            this.setHighPriorityAlwaysOnTop(window);
           }
-        } catch (error) {
-          logger.warn('Error enforcing always-on-top', { 
-            type, 
-            error: error.message 
-          });
-          // Fallback to basic always-on-top
-          try {
-            window.setAlwaysOnTop(true);
-          } catch (fallbackError) {
-            logger.error('Fallback always-on-top failed', { 
-              type, 
-              error: fallbackError.message 
-            });
-          }
-        }
+        }, 100);
       }
     });
     
@@ -1330,6 +1168,19 @@ class WindowManager {
     const llmWindow = this.windows.get('llmResponse');
     if (llmWindow) {
       llmWindow.hide();
+    }
+  }
+
+  toggleLLMResponse() {
+    const llmWindow = this.windows.get('llmResponse');
+    if (!llmWindow || llmWindow.isDestroyed()) return;
+    if (llmWindow.isVisible()) {
+      llmWindow.hide();
+    } else {
+      this.showOnCurrentDesktop(llmWindow);
+      if (this.bindWindows) {
+        this.positionBoundWindows();
+      }
     }
   }
 
