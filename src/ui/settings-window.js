@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const codingLanguageSelect = document.getElementById('codingLanguage');
     const activeSkillSelect = document.getElementById('activeSkill');
     const iconGrid = document.getElementById('iconGrid');
+    const themeSelect = document.getElementById('theme');
 
     // Check if window.api exists
     if (!window.api) {
@@ -74,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Function to load settings into UI
     const loadSettingsIntoUI = (settings) => {
+        if (themeSelect) themeSelect.value = settings.theme || 'dark';
         if (settings.speechProvider && speechProviderSelect) speechProviderSelect.value = settings.speechProvider;
         // Always set the input value, even if empty, so the user sees what's
         // currently configured (including env-derived defaults). Previously
@@ -148,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (whisperSegmentMsInput) settings.whisperSegmentMs = whisperSegmentMsInput.value;
         if (geminiKeyInput) settings.geminiKey = geminiKeyInput.value;
         if (windowGapInput) settings.windowGap = windowGapInput.value;
+        if (themeSelect) settings.theme = themeSelect.value;
         if (codingLanguageSelect) settings.codingLanguage = codingLanguageSelect.value;
         if (activeSkillSelect) settings.activeSkill = activeSkillSelect.value;
         
@@ -211,6 +214,10 @@ document.addEventListener('DOMContentLoaded', () => {
             updateSpeechFieldStates();
             saveSettings();
         });
+    }
+
+    if (themeSelect) {
+        themeSelect.addEventListener('change', saveSettings);
     }
 
     // Language selection handler

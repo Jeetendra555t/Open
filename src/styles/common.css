@@ -13,6 +13,96 @@ body {
     cursor: default;
 }
 
+html[data-theme="light"] body {
+    color: #17202a;
+    background: rgba(245, 248, 250, 0.88) !important;
+}
+
+html[data-theme="light"] .app-container,
+html[data-theme="light"] .chat-container,
+html[data-theme="light"] .settings-container {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(232, 238, 242, 0.9) 100%) !important;
+    border-color: rgba(40, 55, 65, 0.2) !important;
+    box-shadow: 0 4px 25px rgba(40, 55, 65, 0.18) !important;
+}
+
+html[data-theme="light"] .app-header,
+html[data-theme="light"] .settings-header,
+html[data-theme="light"] .chat-header {
+    background: rgba(255, 255, 255, 0.7) !important;
+    border-color: rgba(40, 55, 65, 0.15) !important;
+}
+
+html[data-theme="light"] .command-tab {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(232, 238, 242, 0.94) 100%) !important;
+    color: #17202a !important;
+    border-color: rgba(40, 55, 65, 0.2) !important;
+}
+
+html[data-theme="light"] .command-item,
+html[data-theme="light"] .command-item span,
+html[data-theme="light"] .chat-header .header-title,
+html[data-theme="light"] .chat-messages .message,
+html[data-theme="light"] .chat-messages .message-text,
+html[data-theme="light"] .markdown-content,
+html[data-theme="light"] .markdown-content p,
+html[data-theme="light"] .markdown-content li,
+html[data-theme="light"] .markdown-content h1,
+html[data-theme="light"] .markdown-content h2,
+html[data-theme="light"] .markdown-content h3 {
+    color: #17202a !important;
+    text-shadow: none !important;
+}
+
+html[data-theme="light"] .chat-messages .message,
+html[data-theme="light"] .full-content-inner {
+    background: rgba(255, 255, 255, 0.62) !important;
+    border-color: rgba(40, 55, 65, 0.16) !important;
+}
+
+html[data-theme="light"] .markdown-content code,
+html[data-theme="light"] .markdown-content pre,
+html[data-theme="light"] .code-block,
+html[data-theme="light"] .code-header,
+html[data-theme="light"] .code-content {
+    background-color: rgba(220, 228, 233, 0.72) !important;
+    color: #26343d !important;
+    border-color: rgba(40, 55, 65, 0.15) !important;
+}
+
+html[data-theme="light"] .header-title,
+html[data-theme="light"] .settings-section-title,
+html[data-theme="light"] .settings-item-label,
+html[data-theme="light"] .settings-content,
+html[data-theme="light"] .app-content {
+    color: #17202a !important;
+    text-shadow: none !important;
+}
+
+html[data-theme="light"] .settings-item-description {
+    color: #52616b !important;
+}
+
+html[data-theme="light"] .btn,
+html[data-theme="light"] .input-field,
+html[data-theme="light"] .card,
+html[data-theme="light"] .message,
+html[data-theme="light"] .settings-section-content {
+    background: rgba(255, 255, 255, 0.65) !important;
+    color: #17202a !important;
+    border-color: rgba(40, 55, 65, 0.18) !important;
+}
+
+html[data-theme="light"] .btn:hover,
+html[data-theme="light"] .card:hover,
+html[data-theme="light"] .settings-item:hover {
+    background: rgba(210, 220, 226, 0.7) !important;
+}
+
+html[data-theme="light"] .input-field::placeholder {
+    color: #71808a !important;
+}
+
 /* Common container styles */
 .app-container {
     width: 100%;

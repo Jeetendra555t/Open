@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings</title>
     <link href="./src/styles/common.css" rel="stylesheet">
+    <script src="./src/ui/theme.js"></script>
     <style>
         * {
             margin: 0;
@@ -298,6 +299,16 @@
                     Language & Skills
                 </div>
                 <div class="settings-section-content">
+                    <div class="settings-item">
+                        <div>
+                            <div class="settings-item-label">Appearance</div>
+                            <div class="settings-item-description">Choose the overlay style that blends best with your screen</div>
+                        </div>
+                        <select class="input-field" id="theme">
+                            <option value="dark">Dark</option>
+                            <option value="light">Light</option>
+                        </select>
+                    </div>
                     <div class="settings-item">
                         <div>
                             <div class="settings-item-label">Coding Language</div>

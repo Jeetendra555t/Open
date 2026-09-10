@@ -1607,6 +1607,7 @@ class ApplicationController {
       appIcon: this.appIcon || "terminal",
       selectedIcon: this.appIcon || "terminal",
       windowGap: windowManager.windowGap,
+      theme: process.env.APP_THEME === "light" ? "light" : "dark",
 
       speechProvider: speechService.provider || "whisper",
       azureKey: process.env.AZURE_SPEECH_KEY || "",
@@ -1652,6 +1653,9 @@ class ApplicationController {
         const gap = Number(settings.windowGap);
         if (Number.isFinite(gap)) windowManager.setWindowGap(gap);
       }
+      if (settings.theme === "light" || settings.theme === "dark") {
+        windowManager.broadcastToAllWindows("theme-changed", { theme: settings.theme });
+      }
 
       // ── Persist provider / API-key fields back to .env ──
       // The settings UI is now the source of truth for these values.
@@ -1690,6 +1694,9 @@ class ApplicationController {
       }
       if (settings.geminiKey !== undefined) {
         envUpdates.GEMINI_API_KEY = settings.geminiKey;
+      }
+      if (settings.theme === "light" || settings.theme === "dark") {
+        envUpdates.APP_THEME = settings.theme;
       }
 
       // Capture the previous whisper command BEFORE persisting — persistEnvUpdates
