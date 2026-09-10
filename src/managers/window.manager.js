@@ -9,6 +9,7 @@ class WindowManager {
     this.activeWindow = 'main';
     this.isInteractive = true; // default to interactive so windows are clickable/drag-able
     this.isVisible = false;
+    this.hiddenWindowTypes = new Set();
     this.currentDisplay = null;
     this.screenWatcher = null;
     this.desktopWatcher = null;
@@ -966,10 +967,27 @@ class WindowManager {
       return this.isVisible;
     }
 
-    if (this.isVisible) {
+    const visibleWindowTypes = [...this.windows.entries()]
+      .filter(([type, window]) => type !== 'llmResponse' && !window.isDestroyed() && window.isVisible())
+      .map(([type]) => type);
+
+    if (visibleWindowTypes.length > 0) {
+      this.hiddenWindowTypes = new Set(visibleWindowTypes);
       this.hideAllWindows();
     } else {
-      this.showAllWindows();
+      const windowTypesToRestore = this.hiddenWindowTypes.size > 0
+        ? this.hiddenWindowTypes
+        : new Set(['main']);
+
+      windowTypesToRestore.forEach((type) => {
+        const window = this.windows.get(type);
+        if (window && !window.isDestroyed()) {
+          this.showOnCurrentDesktop(window);
+        }
+      });
+
+      this.hiddenWindowTypes.clear();
+      this.isVisible = true;
     }
     
     return this.isVisible;
